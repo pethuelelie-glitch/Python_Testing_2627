@@ -30,6 +30,18 @@ def test_logout_clears_session(logged_client):
         assert "club" not in session
 
 
+def test_summary_page_shows_logged_in_club(logged_client):
+    response = logged_client.get("/summary")
+    assert response.status_code == 200
+    assert b"Welcome, a@test.com" in response.data
+    assert b"Points available: 20" in response.data
+
+
+def test_summary_page_requires_login(client):
+    response = client.get("/summary", follow_redirects=True)
+    assert b"Please log in" in response.data
+
+
 def test_summary_hides_booking_link_for_past_competition(client):
     response = client.post("/showSummary", data={"email": "a@test.com"})
     assert b"/book/Future%20Comp/Club%20A" in response.data

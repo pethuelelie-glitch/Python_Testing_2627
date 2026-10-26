@@ -48,6 +48,15 @@ def showSummary():
     return render_template('welcome.html', club=club, competitions=competitions)
 
 
+@app.route('/summary')
+def summary():
+    matchingClubs = [c for c in clubs if c['name'] == session.get('club')]
+    if not matchingClubs:
+        flash("Please log in with your club's email to book places.")
+        return redirect(url_for('index'))
+    return render_template('welcome.html', club=matchingClubs[0], competitions=competitions)
+
+
 @app.route('/book/<competition>/<club>')
 def book(competition, club):
     if session.get('club') != club:
