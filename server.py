@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from flask import Flask,render_template,request,redirect,flash,url_for
+from flask import Flask,render_template,request,redirect,flash,url_for,session
 
 
 def loadClubs():
@@ -42,11 +42,15 @@ def showSummary():
         flash("Sorry, that email wasn't found.")
         return redirect(url_for('index'))
     club = matchingClubs[0]
+    session['club'] = club['name']
     return render_template('welcome.html',club=club,competitions=competitions)
 
 
 @app.route('/book/<competition>/<club>')
 def book(competition,club):
+    if session.get('club') != club:
+        flash("Please log in with your club's email to book places.")
+        return redirect(url_for('index'))
     foundClubs = [c for c in clubs if c['name'] == club]
     foundCompetitions = [c for c in competitions if c['name'] == competition]
     if foundClubs and foundCompetitions and isPastCompetition(foundCompetitions[0]):
@@ -63,6 +67,9 @@ def book(competition,club):
 
 @app.route('/purchasePlaces',methods=['POST'])
 def purchasePlaces():
+    if session.get('club') != request.form.get('club'):
+        flash("Please log in with your club's email to book places.")
+        return redirect(url_for('index'))
     foundCompetitions = [c for c in competitions if c['name'] == request.form.get('competition')]
     foundClubs = [c for c in clubs if c['name'] == request.form.get('club')]
     if not foundCompetitions or not foundClubs:
@@ -106,4 +113,5 @@ def pointsBoard():
 
 @app.route('/logout')
 def logout():
+    session.clear()
     return redirect(url_for('index'))
