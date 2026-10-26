@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from flask import Flask,render_template,request,redirect,flash,url_for
 
 
@@ -14,8 +15,14 @@ def loadCompetitions():
          return listOfCompetitions
 
 
+def isPastCompetition(competition):
+    competitionDate = datetime.strptime(competition['date'], '%Y-%m-%d %H:%M:%S')
+    return competitionDate < datetime.now()
+
+
 app = Flask(__name__)
 app.secret_key = 'something_special'
+app.jinja_env.globals['isPastCompetition'] = isPastCompetition
 
 competitions = loadCompetitions()
 clubs = loadClubs()
@@ -42,6 +49,9 @@ def showSummary():
 def book(competition,club):
     foundClubs = [c for c in clubs if c['name'] == club]
     foundCompetitions = [c for c in competitions if c['name'] == competition]
+    if foundClubs and foundCompetitions and isPastCompetition(foundCompetitions[0]):
+        flash("This competition has already taken place, booking is closed.")
+        return render_template('welcome.html', club=foundClubs[0], competitions=competitions)
     if foundClubs and foundCompetitions:
         return render_template('booking.html',club=foundClubs[0],competition=foundCompetitions[0])
     else:
@@ -60,6 +70,9 @@ def purchasePlaces():
         return redirect(url_for('index'))
     competition = foundCompetitions[0]
     club = foundClubs[0]
+    if isPastCompetition(competition):
+        flash("This competition has already taken place, booking is closed.")
+        return render_template('welcome.html', club=club, competitions=competitions)
     try:
         placesRequired = int(request.form.get('places', ''))
     except ValueError:
