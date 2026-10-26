@@ -49,9 +49,18 @@ def book(competition,club):
 
 @app.route('/purchasePlaces',methods=['POST'])
 def purchasePlaces():
-    competition = [c for c in competitions if c['name'] == request.form['competition']][0]
-    club = [c for c in clubs if c['name'] == request.form['club']][0]
-    placesRequired = int(request.form['places'])
+    foundCompetitions = [c for c in competitions if c['name'] == request.form.get('competition')]
+    foundClubs = [c for c in clubs if c['name'] == request.form.get('club')]
+    if not foundCompetitions or not foundClubs:
+        flash("Something went wrong-please try again")
+        return redirect(url_for('index'))
+    competition = foundCompetitions[0]
+    club = foundClubs[0]
+    try:
+        placesRequired = int(request.form.get('places', ''))
+    except ValueError:
+        flash("Please enter a valid number of places.")
+        return render_template('booking.html', club=club, competition=competition)
     competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
     flash('Great-booking complete!')
     return render_template('welcome.html', club=club, competitions=competitions)
