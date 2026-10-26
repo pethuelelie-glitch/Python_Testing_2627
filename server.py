@@ -1,18 +1,18 @@
 import json
 from datetime import datetime
-from flask import Flask,render_template,request,redirect,flash,url_for,session
+from flask import Flask, render_template, request, redirect, flash, url_for, session
 
 
 def loadClubs():
     with open('clubs.json') as c:
-         listOfClubs = json.load(c)['clubs']
-         return listOfClubs
+        listOfClubs = json.load(c)['clubs']
+        return listOfClubs
 
 
 def loadCompetitions():
     with open('competitions.json') as comps:
-         listOfCompetitions = json.load(comps)['competitions']
-         return listOfCompetitions
+        listOfCompetitions = json.load(comps)['competitions']
+        return listOfCompetitions
 
 
 def isPastCompetition(competition):
@@ -31,11 +31,13 @@ MAX_PLACES_PER_CLUB = 12
 # Places already booked, keyed by (competition name, club name)
 bookings = {}
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/showSummary',methods=['POST'])
+
+@app.route('/showSummary', methods=['POST'])
 def showSummary():
     matchingClubs = [club for club in clubs if club['email'] == request.form['email']]
     if not matchingClubs:
@@ -43,11 +45,11 @@ def showSummary():
         return redirect(url_for('index'))
     club = matchingClubs[0]
     session['club'] = club['name']
-    return render_template('welcome.html',club=club,competitions=competitions)
+    return render_template('welcome.html', club=club, competitions=competitions)
 
 
 @app.route('/book/<competition>/<club>')
-def book(competition,club):
+def book(competition, club):
     if session.get('club') != club:
         flash("Please log in with your club's email to book places.")
         return redirect(url_for('index'))
@@ -57,7 +59,7 @@ def book(competition,club):
         flash("This competition has already taken place, booking is closed.")
         return render_template('welcome.html', club=foundClubs[0], competitions=competitions)
     if foundClubs and foundCompetitions:
-        return render_template('booking.html',club=foundClubs[0],competition=foundCompetitions[0])
+        return render_template('booking.html', club=foundClubs[0], competition=foundCompetitions[0])
     else:
         flash("Something went wrong-please try again")
         if foundClubs:
@@ -65,7 +67,7 @@ def book(competition,club):
         return redirect(url_for('index'))
 
 
-@app.route('/purchasePlaces',methods=['POST'])
+@app.route('/purchasePlaces', methods=['POST'])
 def purchasePlaces():
     if session.get('club') != request.form.get('club'):
         flash("Please log in with your club's email to book places.")
