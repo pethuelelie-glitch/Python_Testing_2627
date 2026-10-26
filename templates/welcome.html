@@ -1,36 +1,56 @@
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Summary | GUDLFT Registration</title>
-</head>
-<body>
-        <h2>Welcome, {{club['email']}} </h2><a href="{{url_for('logout')}}">Logout</a> | <a href="{{url_for('pointsBoard')}}">See clubs points</a>
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, flashes %}
 
-    {% with messages = get_flashed_messages()%}
-    {% if messages %}
-        <ul>
-       {% for message in messages %}
-            <li>{{message}}</li>
-        {% endfor %}
-       </ul>
-    {% endif%}
-    Points available: {{club['points']}}
-    <h3>Competitions:</h3>
-    <ul>
-        {% for comp in competitions%}
-        <li>
-            {{comp['name']}}<br />
-            Date: {{comp['date']}}</br>
-            Number of Places: {{comp['numberOfPlaces']}}
-            {%if comp['numberOfPlaces']|int >0 and not isPastCompetition(comp)%}
-            <a href="{{ url_for('book',competition=comp['name'],club=club['name']) }}">Book Places</a>
-            {%endif%}
+{% block title %}Summary | GUDLFT Registration{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-head">
+        <span class="eyebrow reveal" style="--i:0">{{club['name']}}</span>
+        <h1 class="page-title reveal" style="--i:1">Welcome, {{club['email']}}</h1>
+    </header>
+
+    {{ flashes() }}
+
+    <section class="stats" aria-label="Your club">
+        <div class="stat reveal" style="--i:2">
+            <p class="stat__label">Your balance</p>
+            <p class="stat__value" data-countup>Points available: {{club['points']}}</p>
+        </div>
+        <div class="stat stat--light reveal" style="--i:3">
+            <p class="stat__label">How it works</p>
+            <p>1 point buys 1 place. You can book up to 12 places per competition.</p>
+        </div>
+    </section>
+
+    <h2 class="section-title reveal" style="--i:3">Competitions:</h2>
+    <ul class="comp-grid">
+        {% for comp in competitions %}
+        {% set past = isPastCompetition(comp) %}
+        {% set full = comp['numberOfPlaces']|int <= 0 %}
+        {% set open = not past and not full %}
+        <li class="comp {{ 'comp--open' if open else 'comp--closed' }} reveal" style="--i:{{ loop.index + 3 }}">
+            <div class="comp__top">
+                <h3 class="comp__name">{{comp['name']}}</h3>
+                {% if past %}<span class="badge badge--past">Past</span>
+                {% elif full %}<span class="badge badge--full">Full</span>
+                {% else %}<span class="badge badge--open">Open</span>{% endif %}
+            </div>
+            <div class="comp__meta">
+                <div>{{ icon('calendar') }} Date: {{comp['date'][:10]}} · {{comp['date'][11:16]}}</div>
+                <div class="comp__places">{{ icon('users') }} Number of Places: {{comp['numberOfPlaces']}}</div>
+            </div>
+            {% if open %}
+            <a class="btn btn--primary comp__action" href="{{ url_for('book',competition=comp['name'],club=club['name']) }}">
+                Book Places {{ icon('arrow-right', 'icon--arrow') }}
+            </a>
+            {% elif past %}
+            <p class="comp__closed-note">This competition has already taken place.</p>
+            {% else %}
+            <p class="comp__closed-note">No places left.</p>
+            {% endif %}
         </li>
-        <hr />
         {% endfor %}
     </ul>
-    {%endwith%}
-
-</body>
-</html>
+</div>
+{% endblock %}
