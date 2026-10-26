@@ -65,6 +65,9 @@ def purchasePlaces():
     except ValueError:
         flash("Please enter a valid number of places.")
         return render_template('booking.html', club=club, competition=competition)
+    if placesRequired > int(competition['numberOfPlaces']):
+        flash("Not enough places available in this competition.")
+        return render_template('booking.html', club=club, competition=competition)
     if placesRequired > int(club['points']):
         flash("You don't have enough points to book that many places.")
         return render_template('booking.html', club=club, competition=competition)
